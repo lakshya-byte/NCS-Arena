@@ -1,29 +1,65 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
-import CreateContest from "./pages/CreateContest";
 import Participants from "./pages/Participants";
-import AdminNavbar  from "./components/AdminNavbar";
+import Submissions from "./pages/Submissions";
+import CreateContest from "./pages/CreateContest";
+import Login from "./pages/Login";
+
+/* ── Auth Guard ── */
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const location = useLocation();
+
+  if (!isAdmin) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AdminNavbar />
+      <Routes>
+        {/* Public — Login */}
+        <Route path="/admin/login" element={<Login />} />
 
-      <div className="min-h-screen bg-[#020617] text-white p-6 pt-20">
-        <Routes>
-          <Route path="/admin/login" element={<Login />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/create-contest" element={<CreateContest />} />
-          <Route
-            path="/admin/participants/:contestId"
-            element={<Participants />}
-          />
+        {/* Protected — everything else */}
+        <Route
+          path="/admin/*"
+          element={
+            <RequireAuth>
+              <div className="flex h-screen bg-[#020617] text-white overflow-hidden">
+                <Sidebar />
+                <main className="flex-1 overflow-y-auto">
+                  <Routes>
+                    <Route index element={<Dashboard />} />
+                    <Route
+                      path="contest/:contestId"
+                      element={<Participants />}
+                    />
+                    <Route
+                      path="contest/:contestId/:participantId"
+                      element={<Submissions />}
+                    />
+                    <Route path="create-contest" element={<CreateContest />} />
+                  </Routes>
+                </main>
+              </div>
+            </RequireAuth>
+          }
+        />
 
-          {/* default */}
-          <Route path="*" element={<Navigate to="/admin/login" />} />
-        </Routes>
-      </div>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }

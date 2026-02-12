@@ -1,6 +1,53 @@
 import { Participant } from "../models/Participant.js";
-import { getIO } from "../socket.js";
 import { LevelAttempt } from "../models/LevelAttempt.js";
+import { getIO } from "../socket.js";
+import { Submission } from "../models/Submission.js";
+
+import { level1Questions } from "../questions/level1.questions.js";
+import { level2Questions } from "../questions/level2.questions.js";
+import { level3Questions } from "../questions/level3.questions.js";
+import { level4Questions } from "../questions/level4.questions.js";
+import { level5Questions } from "../questions/level5.questions.js";
+
+/* =========================================================
+   1) LIST PARTICIPANTS + THEIR LEVEL ATTEMPTS
+   GET /api/participant/:contestId   (admin version)
+========================================================= */
+
+export const listParticipants = async (req, res) => {
+  try {
+    const { contestId } = req.params;
+
+    const participants = await Participant.find({ contestId })
+      .sort({ createdAt: 1 })
+      .select("name rollNo branch year status levelsPassed totalTime createdAt")
+      .lean();
+
+    const attempts = await LevelAttempt.find({ contestId }).lean();
+
+    const enrichedParticipants = participants.map((p) => ({
+      ...p,
+      attempts: attempts.filter(
+        (a) => String(a.participantId) === String(p._id),
+      ),
+    }));
+
+    return res.status(200).json({
+      success: true,
+      participants: enrichedParticipants,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================================
+   2) DISQUALIFY PARTICIPANT
+   PUT /api/admin/participant/:participantId/disqualify
+========================================================= */
 
 export const disqualifyParticipant = async (req, res) => {
   try {
@@ -19,18 +66,40 @@ export const disqualifyParticipant = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    // YOUR RULE: invalidate all attempts
+    await LevelAttempt.updateMany(
+      { participantId },
+      { adminResult: "rejected" },
+    );
+
+    // Recompute leaderboard (exclude disqualified)
+    const leaderboard = await Participant.find({
+      contestId: participant.contestId,
+      status: { $ne: "disqualified" },
+    })
+      .sort({ levelsPassed: -1, totalTime: 1 })
+      .select("name levelsPassed totalTime status");
+
+    getIO()
+      .to(`contest:${participant.contestId}`)
+      .emit("leaderboard:update", leaderboard);
+
+    return res.status(200).json({
       success: true,
       message: "Participant disqualified",
-      participant,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+/* =========================================================
+   3) OVERRIDE LEVEL RESULT
+   PUT /api/admin/attempt/:attemptId/override
+========================================================= */
 
 export const overrideLevelResult = async (req, res) => {
   try {
@@ -52,59 +121,96 @@ export const overrideLevelResult = async (req, res) => {
       });
     }
 
-    // If admin accepts and it was NOT already accepted
-    if (adminResult === "accepted" && attempt.adminResult !== "accepted") {
-      const timeTaken =
-        new Date(attempt.bestSubmitTime || new Date()) -
-        new Date(attempt.startTime);
+    const participant = await Participant.findById(attempt.participantId);
 
-      await Participant.findByIdAndUpdate(attempt.participantId, {
-        $inc: {
-          levelsPassed: 1,
-          totalTime: timeTaken,
-        },
-      });
+    // ===== CASE 1: ADMIN ACCEPT =====
+    if (adminResult === "accepted" && attempt.adminResult !== "accepted") {
+      const timeTaken = Date.now() - new Date(attempt.startTime).getTime();
+
+      participant.levelsPassed += 1;
+      participant.totalTime += timeTaken;
+      await participant.save();
     }
 
-    // If admin rejects and it WAS previously accepted, rollback score
+    // ===== CASE 2: ADMIN REJECT (rollback if needed) =====
     if (adminResult === "rejected" && attempt.adminResult === "accepted") {
-      const timeTaken =
-        new Date(attempt.bestSubmitTime || new Date()) -
-        new Date(attempt.startTime);
+      const timeTaken = Date.now() - new Date(attempt.startTime).getTime();
 
-      await Participant.findByIdAndUpdate(attempt.participantId, {
-        $inc: {
-          levelsPassed: -1,
-          totalTime: -timeTaken,
-        },
-      });
+      participant.levelsPassed -= 1;
+      participant.totalTime -= timeTaken;
+      await participant.save();
     }
 
     attempt.adminResult = adminResult;
     await attempt.save();
 
-    // -------- RECALCULATE + EMIT LEADERBOARD --------
-    const participant = await Participant.findById(attempt.participantId);
-
+    // Recompute leaderboard (exclude disqualified)
     const leaderboard = await Participant.find({
       contestId: attempt.contestId,
+      status: { $ne: "disqualified" },
     })
       .sort({ levelsPassed: -1, totalTime: 1 })
       .select("name levelsPassed totalTime status");
 
-    const room = `contest:${attempt.contestId}`;
-    getIO().to(room).emit("leaderboard:update", leaderboard);
-    // -----------------------------------------------
+    getIO()
+      .to(`contest:${attempt.contestId}`)
+      .emit("leaderboard:update", leaderboard);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Level result overridden",
       attempt,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
+  }
+};
+
+export const listSubmissions = async (req, res) => {
+  try {
+    const { contestId, participantId } = req.params;
+
+    const submissions = await Submission.find({
+      contestId,
+      participantId,
+    }).sort({ submittedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      submissions,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+/* =========================================================
+   5) LIST QUESTION POOLS (for Create Contest dropdowns)
+   GET /api/admin/question-pool
+========================================================= */
+
+const pools = {
+  1: level1Questions,
+  2: level2Questions,
+  3: level3Questions,
+  4: level4Questions,
+  5: level5Questions,
+};
+
+export const listQuestionPools = (req, res) => {
+  try {
+    const result = {};
+    for (const [level, questions] of Object.entries(pools)) {
+      result[level] = questions.map((q) => ({ id: q.id, title: q.title }));
+    }
+    return res.status(200).json({ success: true, pools: result });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
