@@ -4,16 +4,7 @@ import { apiClient } from "../services/http";
 import { ENDPOINTS } from "../services/api";
 import { socket } from "../lib/socket";
 import gsap from "gsap";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Trophy, Clock, Layers, Wifi } from "lucide-react";
 
 interface Player {
   _id: string;
@@ -25,149 +16,216 @@ interface Player {
 const Leaderboard = () => {
   const { contestId } = useParams();
   const [rows, setRows] = useState<Player[]>([]);
-  const podiumRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [connected, setConnected] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
-  // ---------------- INITIAL FETCH + SOCKET ----------------
+  // Initial fetch + socket
   useEffect(() => {
     if (!contestId) return;
 
-    apiClient.get(ENDPOINTS.LEADERBOARD(contestId)).then((res) => {
-      console.log(res.data);
-      setRows(res.data.leaderboard);
-    });
+    // Fetch leaderboard
+    apiClient
+      .get(ENDPOINTS.LEADERBOARD(contestId))
+      .then((res) => setRows(res.data.leaderboard || []))
+      .catch((err) => console.error("Leaderboard fetch error:", err));
 
+    // Connect socket
+    if (!socket.connected) socket.connect();
     socket.emit("joinContest", { contestId });
+    setConnected(true);
 
-    socket.on("leaderboard:update", (data) => {
+    socket.on("leaderboard:update", (data: Player[]) => {
       setRows(data);
     });
 
     return () => {
       socket.off("leaderboard:update");
+      socket.disconnect();
+      setConnected(false);
     };
   }, [contestId]);
 
-  // ---------------- ANIMATE PODIUM ON UPDATE ----------------
+  // Animate rows on update
   useEffect(() => {
+    if (!tableRef.current) return;
     gsap.fromTo(
-      podiumRefs.current,
-      { y: 40, opacity: 0 },
+      tableRef.current.querySelectorAll("tr"),
+      { opacity: 0, y: 15 },
       {
-        y: 0,
         opacity: 1,
-        stagger: 0.15,
-        duration: 0.6,
+        y: 0,
+        stagger: 0.05,
+        duration: 0.4,
         ease: "power2.out",
       },
     );
   }, [rows]);
 
+  const formatTime = (ms: number) => {
+    if (!ms || ms <= 0) return "—";
+    const sec = Math.floor(ms / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m ${s}s`;
+  };
+
   const top3 = rows.slice(0, 3);
-  const rest = rows.slice(3);
+
+  const podiumColors = [
+    "from-amber-500/20 to-amber-600/5 border-amber-500/30",
+    "from-slate-400/20 to-slate-500/5 border-slate-400/30",
+    "from-orange-600/20 to-orange-700/5 border-orange-600/30",
+  ];
+  const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6">
-      <h1 className="text-2xl font-semibold mb-6">Live Leaderboard</h1>
+    <div className="min-h-screen bg-[#020617] text-white pt-28 pb-20 px-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-mono text-indigo-400 mb-4">
+            <Wifi
+              size={10}
+              className={
+                connected ? "text-emerald-400 animate-pulse" : "text-red-400"
+              }
+            />
+            {connected ? "LIVE" : "CONNECTING..."}
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Live Leaderboard
+          </h1>
+          <p className="text-slate-500 text-sm">
+            {rows.length} participants ranked
+          </p>
+        </div>
 
-      {/* ---------------- PODIUM ---------------- */}
-      <div className="flex justify-center items-end gap-6 mb-10">
-        {/* 2nd PLACE */}
-        {top3[1] && (
-          <Card
-            ref={(el) => (podiumRefs.current[1] = el)}
-            className="w-52 bg-slate-900 border-slate-800"
-          >
-            <CardHeader>
-              <CardTitle className="text-center text-slate-300">
-                🥈 {top3[1].name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm">Levels: {top3[1].levelsPassed}</p>
-              <p className="text-xs text-slate-400">
-                Time: {top3[1].totalTime} ms
-              </p>
-            </CardContent>
-          </Card>
+        {/* Podium */}
+        {top3.length > 0 && (
+          <div className="flex justify-center items-end gap-4 mb-12">
+            {/* 2nd */}
+            {top3[1] && (
+              <div
+                className={`w-44 p-5 rounded-2xl bg-gradient-to-b ${podiumColors[1]} border backdrop-blur-sm text-center transition-all duration-500`}
+              >
+                <div className="text-3xl mb-2">{medals[1]}</div>
+                <h3 className="text-sm font-bold text-white truncate">
+                  {top3[1].name}
+                </h3>
+                <div className="flex items-center justify-center gap-1 mt-2 text-xs text-slate-400">
+                  <Layers size={10} /> {top3[1].levelsPassed}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono">
+                  {formatTime(top3[1].totalTime)}
+                </div>
+              </div>
+            )}
+
+            {/* 1st */}
+            {top3[0] && (
+              <div
+                className={`w-52 p-6 rounded-2xl bg-gradient-to-b ${podiumColors[0]} border backdrop-blur-sm text-center transition-all duration-500 shadow-lg shadow-amber-500/10 -mt-4`}
+              >
+                <div className="text-4xl mb-2">{medals[0]}</div>
+                <h3 className="text-base font-bold text-white truncate">
+                  {top3[0].name}
+                </h3>
+                <div className="flex items-center justify-center gap-1 mt-2 text-xs text-slate-300">
+                  <Layers size={10} /> {top3[0].levelsPassed}
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono">
+                  {formatTime(top3[0].totalTime)}
+                </div>
+              </div>
+            )}
+
+            {/* 3rd */}
+            {top3[2] && (
+              <div
+                className={`w-44 p-5 rounded-2xl bg-gradient-to-b ${podiumColors[2]} border backdrop-blur-sm text-center transition-all duration-500`}
+              >
+                <div className="text-3xl mb-2">{medals[2]}</div>
+                <h3 className="text-sm font-bold text-white truncate">
+                  {top3[2].name}
+                </h3>
+                <div className="flex items-center justify-center gap-1 mt-2 text-xs text-slate-400">
+                  <Layers size={10} /> {top3[2].levelsPassed}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono">
+                  {formatTime(top3[2].totalTime)}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* 1st PLACE */}
-        {top3[0] && (
-          <Card
-            ref={(el) => (podiumRefs.current[0] = el)}
-            className="w-60 bg-indigo-900/20 border-indigo-500/40 shadow-indigo-500/20 shadow-lg"
-          >
-            <CardHeader>
-              <CardTitle className="text-center text-indigo-300">
-                🥇 {top3[0].name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm">Levels: {top3[0].levelsPassed}</p>
-              <p className="text-xs text-slate-400">
-                Time: {top3[0].totalTime} ms
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Full table */}
+        <div
+          className="rounded-2xl bg-[#0B1120] border border-slate-800/60 overflow-hidden"
+          ref={tableRef}
+        >
+          <div className="px-6 py-4 border-b border-slate-800/60 flex items-center gap-2">
+            <Trophy size={14} className="text-indigo-400" />
+            <h2 className="text-sm font-bold text-slate-300">
+              All Participants
+            </h2>
+          </div>
 
-        {/* 3rd PLACE */}
-        {top3[2] && (
-          <Card
-            ref={(el) => (podiumRefs.current[2] = el)}
-            className="w-52 bg-slate-900 border-slate-800"
-          >
-            <CardHeader>
-              <CardTitle className="text-center text-slate-300">
-                🥉 {top3[2].name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm">Levels: {top3[2].levelsPassed}</p>
-              <p className="text-xs text-slate-400">
-                Time: {top3[2].totalTime} ms
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* ---------------- REST OF LEADERBOARD ---------------- */}
-      <Card className="bg-[#0B1120] border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-slate-200">All Participants</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-800">
-                <TableHead className="text-slate-400">Rank</TableHead>
-                <TableHead className="text-slate-400">Name</TableHead>
-                <TableHead className="text-slate-400">Levels Passed</TableHead>
-                <TableHead className="text-slate-400">
-                  Total Time (ms)
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {rest.map((p, i) => (
-                <TableRow key={p._id} className="border-slate-800">
-                  <TableCell className="text-slate-300">{i + 4}</TableCell>
-                  <TableCell className="text-slate-300">{p.name}</TableCell>
-                  <TableCell className="text-slate-300">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-800/40">
+                <th className="text-left px-6 py-3">Rank</th>
+                <th className="text-left px-6 py-3">Name</th>
+                <th className="text-left px-6 py-3 flex items-center gap-1">
+                  <Layers size={10} /> Levels
+                </th>
+                <th className="text-left px-6 py-3 flex items-center gap-1">
+                  <Clock size={10} /> Time
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p, i) => (
+                <tr
+                  key={p._id}
+                  className="border-b border-slate-800/30 last:border-0 hover:bg-slate-900/40 transition-colors duration-200"
+                >
+                  <td className="px-6 py-3.5">
+                    <span
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold ${
+                        i < 3
+                          ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3.5 text-white font-medium">
+                    {p.name}
+                  </td>
+                  <td className="px-6 py-3.5 text-indigo-400 font-bold">
                     {p.levelsPassed}
-                  </TableCell>
-                  <TableCell className="text-slate-400">
-                    {p.totalTime}
-                  </TableCell>
-                </TableRow>
+                  </td>
+                  <td className="px-6 py-3.5 text-slate-400 font-mono text-xs">
+                    {formatTime(p.totalTime)}
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              {rows.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-12 text-center text-slate-600 text-sm"
+                  >
+                    No participants yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

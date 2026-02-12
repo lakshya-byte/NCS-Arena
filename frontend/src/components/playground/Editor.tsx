@@ -44,7 +44,7 @@ export const Editor = ({
         ? "text-blue-500"
         : "text-yellow-400";
 
-  const onMount = (editor, monaco) => {
+  const onMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
 
     // ===== GOD-MODE THEME =====
@@ -150,9 +150,8 @@ export const Editor = ({
       lineDecorationsWidth: 10,
 
       // ========== ERRORS & HINTS ==========
-      lightbulb: { enabled: true },
       codeLens: true,
-      inlayHints: { enabled: true },
+      inlayHints: { enabled: "on" as const },
 
       // ========== PERFORMANCE ==========
       largeFileOptimizations: true,

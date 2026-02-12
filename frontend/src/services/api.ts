@@ -8,4 +8,6 @@ export const ENDPOINTS = {
     LEADERBOARD: (contestId: string) => `/leaderboard/${contestId}`,
     QUESTION: (questionId: string) => `/question/${questionId}`,
     PARTICIPANTS: (contestId: string) => `/participant/${contestId}`,
+    SUBMISSIONS: (contestId: string, participantId: string) =>
+        `/submission/${contestId}/${participantId}`,
 };

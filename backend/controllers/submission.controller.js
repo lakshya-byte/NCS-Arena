@@ -80,7 +80,7 @@ export const submitLevel = async (req, res) => {
     const submissionResult =
       aiResult.result === "accepted" ? "accepted" : "rejected";
 
-      const reason = aiResult.reason;
+    const reason = aiResult.reason;
 
     const submission = await Submission.create({
       participantId,
@@ -90,7 +90,7 @@ export const submitLevel = async (req, res) => {
       css,
       js,
       result: submissionResult,
-      
+
       submittedAt: new Date(),
     });
 
@@ -104,8 +104,7 @@ export const submitLevel = async (req, res) => {
     if (aiResult.result === "accepted") {
       const participant = await Participant.findById(participantId);
 
-      const timeTaken =
-        Date.now() - new Date(attempt.startTime).getTime();
+      const timeTaken = Date.now() - new Date(attempt.startTime).getTime();
 
       participant.levelsPassed += 1;
       participant.totalTime += timeTaken;
@@ -141,6 +140,31 @@ export const submitLevel = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Submission failed",
+    });
+  }
+};
+
+/* =========================================================
+   LIST SUBMISSIONS (for student persistence + admin)
+   GET /api/submission/:contestId/:participantId
+========================================================= */
+export const listSubmissions = async (req, res) => {
+  try {
+    const { contestId, participantId } = req.params;
+
+    const submissions = await Submission.find({
+      contestId,
+      participantId,
+    }).sort({ submittedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      submissions,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
     });
   }
 };

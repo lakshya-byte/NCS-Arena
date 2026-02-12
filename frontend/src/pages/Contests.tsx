@@ -136,7 +136,6 @@ const SpotlightCard = ({
   navigate: any;
 }) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
 
@@ -148,12 +147,10 @@ const SpotlightCard = ({
   };
 
   const handleFocus = () => {
-    setIsFocused(true);
     setOpacity(1);
   };
 
   const handleBlur = () => {
-    setIsFocused(false);
     setOpacity(0);
   };
 
@@ -283,13 +280,17 @@ const SpotlightCard = ({
         {/* Action Trigger */}
         <button
           onClick={() => navigate(`/register/${contest._id}`)}
-          disabled={status === "ended"}
-          className="relative w-full overflow-hidden rounded-xl bg-slate-100 py-3.5 text-sm font-bold text-slate-950 transition-all hover:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+          disabled={status === "ended" || status === "upcoming"}
+          className="relative w-full overflow-hidden rounded-xl bg-slate-100 py-3.5 text-sm font-bold text-slate-950 transition-all hover:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:animate-shimmer"></div>
           <span className="relative flex items-center justify-center gap-2">
-            {status === "ended" ? "Access Denied" : "Initialize Sequence"}
-            {status !== "ended" && <ArrowRight size={16} />}
+            {status === "ended"
+              ? "Access Denied"
+              : status === "upcoming"
+                ? "Starts Soon"
+                : "Initialize Sequence"}
+            {status === "live" && <ArrowRight size={16} />}
           </span>
         </button>
       </div>
@@ -302,9 +303,8 @@ const SpotlightCard = ({
 const TechIcon = ({
   icon,
   color,
-  bg,
 }: {
-  icon: any;
+  icon: React.ReactNode;
   color: string;
   bg: string;
 }) => (
