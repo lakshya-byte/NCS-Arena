@@ -9,18 +9,28 @@ import { Contests } from "./pages/Contests";
 
 export default function App() {
   return (
-    <>
     <BrowserRouter>
-    <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register/:contestId" element={<Register />} />
-        <Route path="/play/:contestId/:participantId/:questionId" element={<Playground />} />
-        <Route path="/leaderboard/:contestId" element={<Leaderboard />} />
-        <Route path="/contests" element={<Contests />} />
-      </Routes>
-      <Footer />
+      <div className="min-h-screen flex flex-col bg-[#020617]">
+        
+        {/* NAVBAR (fixed at top) */}
+        <Navbar />
+
+        {/* PAGE CONTENT — pushed below navbar */}
+        <main className="flex-1 pt-20 px-8 z-0">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register/:contestId" element={<Register />} />
+            <Route
+              path="/play/:contestId/:participantId/:questionId"
+              element={<Playground />}
+            />
+            <Route path="/leaderboard/:contestId" element={<Leaderboard />} />
+            <Route path="/contests" element={<Contests />} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
     </BrowserRouter>
-    </>
   );
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import gsap from "gsap";
 import { Button } from "@/components/ui/button";
+import { apiClient } from "../services/http";
+import { ENDPOINTS } from "../services/api";
 import {
   User,
   Hash,
@@ -13,8 +14,6 @@ import {
   ShieldCheck,
   Terminal,
 } from "lucide-react";
-
-const API = "http://localhost:5000/api";
 
 const Register = () => {
   const { contestId } = useParams();
@@ -29,6 +28,22 @@ const Register = () => {
     branch: "",
     year: "",
   });
+
+  // -------- AUTO-RESUME LOGIC (YOU ARE MISSING THIS) --------
+  useEffect(() => {
+    if (!contestId) return;
+
+    const saved = localStorage.getItem("contestSession");
+    if (!saved) return;
+
+    const session = JSON.parse(saved);
+
+    if (session.contestId === contestId && session.participantId) {
+      const targetQuestion = session.lastQuestionId || session.firstQuestionId;
+
+      navigate(`/play/${contestId}/${session.participantId}/${targetQuestion}`);
+    }
+  }, [contestId]);
 
   // Entrance Animation
   useEffect(() => {
@@ -59,20 +74,15 @@ const Register = () => {
       await new Promise((r) => setTimeout(r, 800));
 
       // 1) Register participant
-      const res = await axios.post(`${API}/participant/register`, {
+      const res = await apiClient.post(ENDPOINTS.REGISTER, {
         contestId,
         ...form,
       });
 
       const participantId = res.data.participant?._id || res.data._id;
 
-      // Save to localStorage
-      localStorage.setItem("participant", JSON.stringify(res.data.participant));
-      if (contestId) localStorage.setItem("contestId", contestId);
-      localStorage.setItem("participantData", JSON.stringify(form));
-
       // 2) Fetch contest to get FIRST questionId
-      const contestRes = await axios.get(`${API}/contest`);
+      const contestRes = await apiClient.get(ENDPOINTS.CONTESTS);
       const contest = contestRes.data.contests.find(
         (c: any) => c._id === contestId,
       );
@@ -85,14 +95,26 @@ const Register = () => {
         return;
       }
 
-      // Success animation
+      // 3) SAVE CLEAN SESSION OBJECT (single source of truth)
+      const session = {
+        contestId,
+        participantId,
+        firstQuestionId,
+        lastQuestionId: firstQuestionId, // start here
+        registeredAt: new Date().toISOString(),
+        profile: form,
+      };
+
+      localStorage.setItem("contestSession", JSON.stringify(session));
+
+      // 4) Success animation
       gsap.to(".register-card", {
         y: -20,
         opacity: 0,
         duration: 0.3,
       });
 
-      // 3) Redirect to correct route
+      // 5) Redirect to playground
       setTimeout(() => {
         navigate(`/play/${contestId}/${participantId}/${firstQuestionId}`);
       }, 300);

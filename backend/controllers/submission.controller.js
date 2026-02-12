@@ -1,47 +1,37 @@
-import puppeteer from "puppeteer";
 import { Submission } from "../models/Submission.js";
 import { LevelAttempt } from "../models/LevelAttempt.js";
 import { Participant } from "../models/Participant.js";
-import { level1Questions } from "../questions/level1.questions.js";
+import { evaluateWithGemini } from "../services/gemini.js";
 import { getIO } from "../socket.js";
 
-// pick correct test
-function getQuestionTest(level, questionId) {
-  if (level === 1) {
-    const q = level1Questions.find((q) => q.id === questionId);
-    if (!q) throw new Error("Invalid questionId for level 1");
-    return q.tests;
-  }
-  throw new Error("Tests for this level not wired yet");
-}
+// Import real question pools
+import { level1Questions } from "../questions/level1.questions.js";
+import { level2Questions } from "../questions/level2.questions.js";
+import { level3Questions } from "../questions/level3.questions.js";
+import { level4Questions } from "../questions/level4.questions.js";
+import { level5Questions } from "../questions/level5.questions.js";
 
-// run puppeteer
-async function runPuppeteerTest(html, css, js, testFn) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  const fullPage = `
-    <!DOCTYPE html>
-    <html>
-      <head><style>${css}</style></head>
-      <body>
-        ${html}
-        <script>${js}</script>
-      </body>
-    </html>
-  `;
-
-  await page.setContent(fullPage, { waitUntil: "domcontentloaded" });
-  const passed = await testFn(page);
-  await browser.close();
-  return passed;
-}
+const pools = {
+  1: level1Questions,
+  2: level2Questions,
+  3: level3Questions,
+  4: level4Questions,
+  5: level5Questions,
+};
 
 export const submitLevel = async (req, res) => {
   try {
-    const { contestId, participantId, level, questionId, html, css, js } =
-      req.body;
+    const {
+      contestId,
+      participantId,
+      level,
+      questionId,
+      html,
+      css = "",
+      js = "",
+    } = req.body;
 
+    // ---------- 1) Ensure level was started ----------
     const attempt = await LevelAttempt.findOne({
       contestId,
       participantId,
@@ -51,62 +41,106 @@ export const submitLevel = async (req, res) => {
     if (!attempt) {
       return res.status(400).json({
         success: false,
-        message: "Call /level/start first.",
+        message: "Call /api/level/start first",
       });
     }
 
-    const testFn = getQuestionTest(level, questionId);
-    const isAccepted = await runPuppeteerTest(html, css, js, testFn);
+    // ---------- 2) Load REAL question from curated pool ----------
+    const pool = pools[level];
 
-    const submission = await Submission.create({
-      contestId,
-      participantId,
-      level,
-      html,
-      css: css || "",
-      js: js || "",
-      result: isAccepted ? "accepted" : "rejected",
-    });
-
-    attempt.attempts += 1;
-
-    if (!attempt.firstSubmitTime) {
-      attempt.firstSubmitTime = new Date();
+    if (!pool) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid level",
+      });
     }
 
-    let participant = await Participant.findById(participantId);
+    const question = pool.find((q) => q.id === questionId);
 
-    if (isAccepted) {
-      const timeTaken = new Date() - new Date(attempt.startTime);
+    if (!question) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid questionId for this level",
+      });
+    }
+
+    // ---------- 3) AI grading ----------
+    const aiResult = await evaluateWithGemini({
+      level,
+      questionTitle: question.title,
+      questionProblem: question.problem,
+      html,
+      css,
+      js,
+    });
+
+    // console.log(aiResult);
+
+    // ---------- 4) Save Submission (NEVER store 'pending') ----------
+    const submissionResult =
+      aiResult.result === "accepted" ? "accepted" : "rejected";
+
+      const reason = aiResult.reason;
+
+    const submission = await Submission.create({
+      participantId,
+      contestId,
+      level,
+      html,
+      css,
+      js,
+      result: submissionResult,
+      
+      submittedAt: new Date(),
+    });
+
+    // If Gemini failed → mark attempt as pending for admin
+    if (aiResult.result === "pending") {
+      attempt.adminResult = "pending";
+      await attempt.save();
+    }
+
+    // ---------- 5) If accepted → update score ----------
+    if (aiResult.result === "accepted") {
+      const participant = await Participant.findById(participantId);
+
+      const timeTaken =
+        Date.now() - new Date(attempt.startTime).getTime();
+
+      participant.levelsPassed += 1;
+      participant.totalTime += timeTaken;
 
       attempt.bestSubmitTime = new Date();
       attempt.autoResult = "accepted";
 
-      participant.levelsPassed += 1;
-      participant.totalTime += timeTaken;
       await participant.save();
+      await attempt.save();
     }
 
-    await attempt.save();
-
-    // -------- REALTIME LEADERBOARD EMIT (ROOM-BASED) --------
-    const leaderboard = await Participant.find({ contestId })
+    // ---------- 6) Recompute leaderboard ----------
+    const participants = await Participant.find({
+      contestId,
+      status: { $ne: "disqualified" },
+    })
       .sort({ levelsPassed: -1, totalTime: 1 })
-      .select("name levelsPassed totalTime status");
+      .select("_id name levelsPassed totalTime status");
 
-    const room = `contest:${contestId}`;
-    getIO().to(room).emit("leaderboard:update", leaderboard);
-    // -------------------------------------------------------
+    // ---------- 7) Emit realtime update ----------
+    const io = getIO();
+    io.to(`contest:${contestId}`).emit("leaderboard:update", participants);
 
-    res.status(201).json({
+    // ---------- 8) Return result to frontend ----------
+    return res.status(200).json({
       success: true,
-      message: isAccepted ? "Accepted" : "Rejected",
-      submission,
+      result: aiResult.result,
+      reason: aiResult.reason,
+      submissionId: submission._id,
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    console.error("Submit error:", err);
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Submission failed",
     });
   }
 };

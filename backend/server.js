@@ -12,11 +12,12 @@ import levelRoutes from "./routes/levelAttempt.routes.js";
 import submissionRoutes from "./routes/submission.routes.js";
 import { initSocket } from "./socket.js";
 import adminRoutes from "./routes/admin.routes.js";
-
+import questionRoutes from "./routes/questions.routes.js";
+import leaderboardRoutes from "./routes/leaderboard.route.js";
 
 const app = express();
-const server = http.createServer(app);   
-initSocket(server);                      
+const server = http.createServer(app);
+initSocket(server);
 
 app.use(cors());
 app.use(express.json());
@@ -26,6 +27,8 @@ app.use("/api/participant", participantRoutes);
 app.use("/api/level", levelRoutes);
 app.use("/api/submission", submissionRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/question", questionRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("Contest Backend is running 🚀");

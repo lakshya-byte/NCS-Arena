@@ -1,0 +1,131 @@
+= Coding Contest Platform — Technical Documentation
+Lakshya Dubey
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+
+== 1. Overview
+
+This project is a full-stack coding contest platform for HTML, CSS, and JavaScript with:
+- Real browser grading using Puppeteer  
+- Real-time leaderboard using Socket.io  
+- Level-based challenges  
+- Smart automated tests  
+
+== 2. High-Level Architecture
+
+[plantuml]
+----
+@startuml
+User -> Frontend : Code Submission
+Frontend -> Backend : /api/submission/submit
+Backend -> Puppeteer : Run Tests
+Backend -> MongoDB : Update Scores
+Backend -> Socket.io : Broadcast Leaderboard
+Socket.io -> Frontend : Live Updates
+@enduml
+----
+
+== 3. System Components
+
+=== 3.1 Backend
+- Node.js + Express  
+- MongoDB + Mongoose  
+- Puppeteer for grading  
+- Socket.io for realtime  
+
+=== 3.2 Frontend (Student)
+- Vite + React  
+- Tailwind + ShadCN  
+- Monaco/CodeMirror Editor  
+- Live Preview  
+
+=== 3.3 Admin Panel
+- Separate Vite app  
+- Contest management  
+- Participant management  
+- Override grading  
+
+== 4. Data Models
+
+=== 4.1 Contest
+[source,js]
+----
+{
+  title: String,
+  description: String,
+  levels: [Number],
+  questions: [
+    { level: Number, questionId: String }
+  ],
+  startTime: Date,
+  endTime: Date,
+  overallTimeLimitMinutes: Number
+}
+----
+
+=== 4.2 Participant
+[source,js]
+----
+{
+  contestId: ObjectId,
+  name: String,
+  rollNo: String,
+  totalTime: Number,
+  levelsPassed: Number,
+  status: "active" | "disqualified"
+}
+----
+
+== 5. Grading Flow
+
+1. Student opens level → `/api/level/start`
+2. Writes code in browser  
+3. Submits → `/api/submission/submit`  
+4. Puppeteer runs tests  
+5. Score updated  
+6. Leaderboard broadcast via Socket.io  
+
+== 6. API Map
+
+|===
+| Endpoint | Method | Purpose
+
+| /api/contest | GET | List contests
+| /api/participant/register | POST | Register user
+| /api/level/start | POST | Start level timer
+| /api/submission/submit | POST | Grade code
+| /api/leaderboard/:contestId | GET | Get leaderboard
+|===
+
+== 7. Socket Model
+
+Room pattern:
+
+----
+contest:<contestId>
+----
+
+Events:
+
+----
+socket.emit("joinContest", { contestId, participantId });
+socket.on("leaderboard:update", handler);
+----
+
+== 8. Future Improvements
+
+- JWT auth for admin  
+- Code autosave  
+- Monaco editor  
+- Dark mode  
+- Analytics dashboard  
+
+== 9. How to Run
+
+----
+npm install
+npm run dev   # frontend
+node server.js # backend
+----

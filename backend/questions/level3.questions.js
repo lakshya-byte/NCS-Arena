@@ -1,255 +1,237 @@
 export const level3Questions = [
   {
     id: "l3q1",
-    title: "Modern Hero with Background",
-    problem:
-      "Create a full-width hero section with background (image/gradient), headline, and CTA.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const hero =
-          document.querySelector(".hero, header, section") ||
-          document.body;
+    title: "The Vanishing Button Spell",
+    problem: `
+Create a button that DISAPPEARS when clicked.
 
-        const h1 = document.querySelector("h1");
-        const cta =
-          document.querySelector("button") ||
-          document.querySelector("a");
+Your page must include:
+• A visible button with text: "Click Me"
+• When clicked → the button should disappear
 
-        const styles = window.getComputedStyle(hero);
-        const hasBg =
-          styles.backgroundImage !== "none" ||
-          styles.backgroundColor !== "rgba(0, 0, 0, 0)";
+Rules:
+• You may use very small JavaScript
+• No libraries allowed
 
-        return Boolean(hero && h1 && cta && hasBg);
-      });
-    },
+Example behavior:
+- Page loads → button visible  
+- Click button → it vanishes from the page  
+`,
+    hints: [
+      "Use a <button> element.",
+      "Add an onclick handler in JavaScript.",
+      "In JS, use element.style.display = 'none'.",
+      "You can give the button an id like 'btn'."
+    ]
   },
 
   {
     id: "l3q2",
-    title: "Responsive Card Grid",
-    problem:
-      "Create a responsive grid that changes columns on different screen sizes.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const cards = document.querySelectorAll(
-          ".card, article, .card-item"
-        );
+    title: "The Color-Changing Orb",
+    problem: `
+Create a box that changes color when clicked.
 
-        const container =
-          document.querySelector(".grid, .cards, main") ||
-          cards[0]?.parentElement;
+Requirements:
+• A visible square box on the page  
+• When clicked → its background color changes  
 
-        if (!container || cards.length < 3) return false;
+Allowed:
+• HTML + CSS + tiny JS only  
 
-        const styles = window.getComputedStyle(container);
-        const isLayout =
-          styles.display === "grid" || styles.display === "flex";
-
-        // Check responsiveness hint via media query or wrap behavior
-        const hasWrap =
-          styles.flexWrap === "wrap" || styles.gridTemplateColumns;
-
-        return isLayout && hasWrap;
-      });
-    },
+Example:
+- First color: blue  
+- After click: green (or any different color)
+`,
+    hints: [
+      "Create a div with fixed width/height.",
+      "Give it an initial background color in CSS.",
+      "Use onclick in JS to change style.backgroundColor.",
+      "You can toggle between two colors."
+    ]
   },
 
   {
     id: "l3q3",
-    title: "Interactive Modal",
-    problem:
-      "Create a button that opens a modal overlay with content.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const openBtn =
-          document.querySelector("button") ||
-          document.querySelector(".open-modal");
+    title: "The Hidden Message Vault",
+    problem: `
+Create a button that REVEALS a hidden message.
 
-        if (!openBtn) return false;
+Your page must include:
+• A button: "Show Message"  
+• A hidden text below it, for example:
+  "You unlocked the secret!"
 
-        openBtn.click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const modal =
-          document.querySelector(".modal, .overlay, [role='dialog']");
-
-        const isVisible =
-          modal &&
-          window.getComputedStyle(modal).display !== "none" &&
-          window.getComputedStyle(modal).opacity !== "0";
-
-        return Boolean(isVisible);
-      });
-    },
+Behavior:
+• Message is hidden at first  
+• Clicking button shows the message  
+`,
+    hints: [
+      "Hide text using CSS: display: none.",
+      "Give the message an id.",
+      "On click, set display = 'block'.",
+      "Use a simple JavaScript function."
+    ]
   },
 
   {
     id: "l3q4",
-    title: "Navigation with Active State",
-    problem:
-      "Create a navbar where the active link is visually highlighted.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const nav =
-          document.querySelector("nav") ||
-          document.querySelector("header");
+    title: "The Expanding Card",
+    problem: `
+Create a card that expands when hovered.
 
-        if (!nav) return false;
+Your card must have:
+• Title  
+• Short description  
+• On hover → card becomes slightly larger  
 
-        const active =
-          nav.querySelector(".active, [aria-current='page']");
+Allowed:
+• HTML + CSS only (JS optional here)
 
-        return Boolean(active);
-      });
-    },
+Styling expectations:
+• Smooth transition  
+• Visible scaling effect  
+`,
+    hints: [
+      "Use a div as the card.",
+      "Add CSS: transform: scale(1.05) on hover.",
+      "Use transition: transform 0.3s.",
+      "Add padding and shadow for effect."
+    ]
   },
 
   {
     id: "l3q5",
-    title: "Form with Validation",
-    problem:
-      "Create a form that shows an error message when input is empty.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const form = document.querySelector("form");
-        const btn =
-          document.querySelector("button") ||
-          document.querySelector("input[type='submit']");
+    title: "The Toggle Night Mode",
+    problem: `
+Create a button that toggles Dark Mode.
 
-        if (!form || !btn) return false;
+Requirements:
+• A button labeled: "Toggle Dark Mode"
+• Clicking it should change background from light → dark  
 
-        btn.click();
-        await new Promise(r => setTimeout(r, 300));
+Allowed:
+• HTML + CSS + tiny JS  
 
-        const error =
-          document.querySelector(".error, .error-msg, .validation");
-
-        return Boolean(error);
-      });
-    },
+Example:
+- Default: white background  
+- After click: dark background  
+`,
+    hints: [
+      "Use a body class like 'dark-mode'.",
+      "In JS, toggle classList on body.",
+      "Define dark-mode styles in CSS.",
+      "Button only triggers toggle."
+    ]
   },
 
   {
     id: "l3q6",
-    title: "Carousel / Slider",
-    problem:
-      "Create a basic image slider with next/prev controls.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const next =
-          document.querySelector(".next, [aria-label='next'], button:last-of-type");
-        const prev =
-          document.querySelector(".prev, [aria-label='previous'], button:first-of-type");
+    title: "The Animated Pulse Beacon",
+    problem: `
+Create a button that pulses continuously.
 
-        if (!next || !prev) return false;
+Requirements:
+• One visible button  
+• Button should gently pulse (grow/shrink) automatically  
 
-        const slides = document.querySelectorAll("img, .slide");
-        if (slides.length < 2) return false;
+Allowed:
+• HTML + CSS only  
 
-        const firstSrc = slides[0].getAttribute("src");
-
-        next.click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const newSrc = slides[0].getAttribute("src");
-
-        return firstSrc !== newSrc;
-      });
-    },
+Hint:
+Use CSS animation instead of JavaScript.
+`,
+    hints: [
+      "Use @keyframes in CSS.",
+      "Animate transform: scale(1) to scale(1.1).",
+      "Apply animation to the button.",
+      "Keep duration around 1–2 seconds."
+    ]
   },
 
   {
     id: "l3q7",
-    title: "Sticky Sidebar",
-    problem:
-      "Create a sidebar that stays visible while scrolling.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const sidebar =
-          document.querySelector(".sidebar, aside");
+    title: "The Live Counter Crystal",
+    problem: `
+Create a counter that increases on every click.
 
-        if (!sidebar) return false;
+Your page must include:
+• A number displayed (start from 0)
+• A button: "Increase"
 
-        const styles = window.getComputedStyle(sidebar);
-        return styles.position === "sticky" || styles.position === "fixed";
-      });
-    },
+Behavior:
+• Each click → number increases by 1  
+`,
+    hints: [
+      "Use a span to show the number.",
+      "Store count in a JS variable.",
+      "On click, increment and update textContent.",
+      "Keep everything simple."
+    ]
   },
 
   {
     id: "l3q8",
-    title: "Interactive Tabs",
-    problem:
-      "Create tabbed navigation that switches visible content.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const tabs =
-          document.querySelectorAll(".tab, button, li");
+    title: "The Image Swap Portal",
+    problem: `
+Create a button that changes an image.
 
-        if (tabs.length < 2) return false;
+Requirements:
+• Show one image initially  
+• Button labeled: "Change Image"  
+• On click → image should change to another one  
 
-        const firstContent =
-          document.querySelector(".panel, .content");
-
-        const firstText = firstContent?.textContent;
-
-        tabs[1].click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const secondContent =
-          document.querySelector(".panel, .content");
-
-        return firstText !== secondContent?.textContent;
-      });
-    },
+Allowed:
+• HTML + CSS + tiny JS  
+`,
+    hints: [
+      "Give image an id.",
+      "Store two image URLs.",
+      "In JS, change img.src on click.",
+      "You can toggle between two images."
+    ]
   },
 
   {
     id: "l3q9",
-    title: "Dark Mode Toggle",
-    problem:
-      "Create a button that toggles dark mode.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const btn =
-          document.querySelector(".theme-toggle, button");
+    title: "The Accordion Scroll",
+    problem: `
+Create a simple accordion section.
 
-        if (!btn) return false;
+Your page must have:
+• A heading: "Click to Expand"
+• Hidden content below it  
+• Clicking heading should reveal content  
 
-        const before = document.documentElement.className;
-
-        btn.click();
-        await new Promise(r => setTimeout(r, 200));
-
-        const after = document.documentElement.className;
-
-        return before !== after || document.body.classList.length > 0;
-      });
-    },
+Allowed:
+• HTML + CSS + tiny JS  
+`,
+    hints: [
+      "Hide content using display: none.",
+      "Use JS to toggle display.",
+      "Wrap content in a div.",
+      "Make heading clickable."
+    ]
   },
 
   {
     id: "l3q10",
-    title: "Dynamic List",
-    problem:
-      "Create a list where items can be added dynamically.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const input = document.querySelector("input");
-        const addBtn = document.querySelector("button");
+    title: "The Dynamic Greeting Scroll",
+    problem: `
+Create a greeting that changes based on time of day.
 
-        if (!input || !addBtn) return false;
+Rules:
+• Display a message like:
+  - "Good Morning"
+  - "Good Afternoon"
+  - "Good Evening"
 
-        input.value = "test item";
-        addBtn.click();
-        await new Promise(r => setTimeout(r, 200));
-
-        const items =
-          document.querySelectorAll("li, .item");
-
-        return items.length >= 1;
-      });
-    },
-  },
+You may use JavaScript to check time.
+`,
+    hints: [
+      "Use new Date().getHours() in JS.",
+      "Use if-else conditions.",
+      "Update innerText of a heading.",
+      "Default to 'Hello' if unsure."
+    ]
+  }
 ];

@@ -1,234 +1,280 @@
 export const level2Questions = [
   {
     id: "l2q1",
-    title: "Responsive Navbar",
-    problem:
-      "Create a responsive navbar with a logo, at least three links, and a mobile toggle.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const nav =
-          document.querySelector("nav") ||
-          document.querySelector("header") ||
-          document.querySelector("[role='navigation']");
+    title: "The Glowing Navigation Relic",
+    problem: `
+Create a simple navigation bar using HTML + CSS.
 
-        const links = document.querySelectorAll("a");
-        const toggle =
-          document.querySelector("button") ||
-          document.querySelector("[aria-label*='menu']") ||
-          document.querySelector(".menu, .hamburger");
+Your navbar must include:
+• At least 3 links:
+  - Home  
+  - About  
+  - Contact  
 
-        return Boolean(nav && links.length >= 3 && toggle);
-      });
-    },
+Styling expectations (simple level):
+• Links should look like buttons  
+• Navbar should be at the top  
+• Use background color (any color)
+
+Example idea:
+<nav>
+  <a>Home</a>
+  <a>About</a>
+  <a>Contact</a>
+</nav>
+
+You are allowed to use:
+• HTML + CSS only (no JavaScript)
+`,
+    hints: [
+      "Use <nav> as a container.",
+      "Style <a> tags with padding and background color.",
+      "Use display: flex to arrange links in a row.",
+      "Give the navbar a background color.",
+    ],
   },
 
   {
     id: "l2q2",
-    title: "Centered Hero Section",
-    problem:
-      "Build a hero section with heading, subtitle, and CTA centered.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const container =
-          document.querySelector(".hero, section, main, header") ||
-          document.body;
+    title: "The Floating Hero Realm",
+    problem: `
+Build a visually styled hero section.
 
-        const h1 =
-          document.querySelector("h1") ||
-          document.querySelector("[role='heading']");
+Your page must include:
+• A big heading  
+• A short description  
+• A styled button that says:
+  "Get Started"
 
-        const subtitle =
-          document.querySelector("p") ||
-          document.querySelector(".subtitle, .tagline");
+Design expectations:
+• Center the content on the page  
+• Add background color to the section  
+• Make the button look clickable  
 
-        const cta =
-          document.querySelector("button") ||
-          document.querySelector("a.cta");
-
-        const styles = window.getComputedStyle(container);
-        const isCentered =
-          styles.display === "flex" &&
-          (styles.justifyContent === "center" ||
-            styles.alignItems === "center");
-
-        return Boolean(h1 && subtitle && cta && isCentered);
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use <section> for the hero.",
+      "Center using flexbox (display: flex).",
+      "Style the button with padding + border-radius.",
+      "Use background-color on the section.",
+    ],
   },
 
   {
     id: "l2q3",
-    title: "Card Grid Layout",
-    problem:
-      "Create a responsive grid with at least 3 cards.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const cards = document.querySelectorAll(
-          ".card, article, .card-item, section"
-        );
+    title: "The Shadow Card of Knowledge",
+    problem: `
+Create a styled "About Me" card in the center.
 
-        const grid =
-          document.querySelector(".grid, .cards, main") ||
-          cards[0]?.parentElement;
+Your card must have:
+• Title: "About Me"  
+• Short paragraph about yourself  
+• Visible card container  
 
-        const styles = window.getComputedStyle(grid || document.body);
+Styling requirements:
+• Card should have:
+  - Background color  
+  - Padding  
+  - Rounded corners  
+  - Slight shadow  
 
-        const isGrid =
-          styles.display === "grid" ||
-          styles.display === "flex";
-
-        return cards.length >= 3 && isGrid;
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Wrap content in a <div> card.",
+      "Use border-radius for rounded corners.",
+      "Add box-shadow for depth.",
+      "Center using margin: auto or flex.",
+    ],
   },
 
   {
     id: "l2q4",
-    title: "Interactive Button",
-    problem: "Create a button that visually changes when clicked.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const btn = document.querySelector("button");
-        if (!btn) return false;
+    title: "The Three Column Temple",
+    problem: `
+Create a three-column layout.
 
-        const before = window.getComputedStyle(btn).backgroundColor;
+Your layout must include:
+• Column 1: "Features"
+• Column 2: "Services"
+• Column 3: "Contact"
 
-        btn.click();
-        await new Promise(r => setTimeout(r, 200));
+Each column should:
+• Have a heading  
+• Have a short paragraph  
 
-        const after = window.getComputedStyle(btn).backgroundColor;
+Styling expectations:
+• Columns should appear side by side  
+• Use flexbox or grid  
 
-        return before !== after || btn.classList.length > 0;
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use a parent div with display: flex.",
+      "Each column can be a child div.",
+      "Give each column padding.",
+      "Add background color to separate them visually.",
+    ],
   },
 
   {
     id: "l2q5",
-    title: "Simple Form",
-    problem: "Create a form with name input and submit button.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const form = document.querySelector("form") || document.body;
-        const input =
-          document.querySelector("input[type='text'], input") ||
-          document.querySelector("textarea");
-        const button =
-          document.querySelector("button") ||
-          document.querySelector("input[type='submit']");
+    title: "The Image Grid Labyrinth",
+    problem: `
+Create a 3-image grid gallery.
 
-        return Boolean(form && input && button);
-      });
-    },
+Requirements:
+• Exactly 3 images  
+• Arrange them in a row or grid  
+• Add small spacing between images  
+
+Styling expectations:
+• Images should have:
+  - Border radius  
+  - Same size  
+  - Some gap between them  
+
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use display: grid or flex.",
+      "Set equal width for images.",
+      "Add gap property for spacing.",
+      "Use border-radius on images.",
+    ],
   },
 
   {
     id: "l2q6",
-    title: "Image Card",
-    problem: "Create a card with image, title, and description.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const card =
-          document.querySelector(".card, article, section") ||
-          document.body;
+    title: "The Profile Badge Portal",
+    problem: `
+Design a small profile card.
 
-        const img = card.querySelector("img");
-        const title =
-          card.querySelector("h2, h3, .title");
-        const text =
-          card.querySelector("p, .description");
+It must include:
+• Your name (heading)  
+• Profile image  
+• Short description  
 
-        return Boolean(img && title && text);
-      });
-    },
+Styling requirements:
+• Card should be centered  
+• Add background color  
+• Add padding and rounded corners  
+
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Wrap everything inside one div.",
+      "Center using flexbox or margin auto.",
+      "Style the image as a circle (border-radius: 50%).",
+      "Add shadow for better look.",
+    ],
   },
 
   {
     id: "l2q7",
-    title: "Sticky Header",
-    problem: "Create a sticky header that stays on top.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const header =
-          document.querySelector("header, nav, .header");
+    title: "The Call-To-Action Monolith",
+    problem: `
+Create a call-to-action section.
 
-        if (!header) return false;
+Your section must have:
+• Heading: "Join Now"  
+• Short description  
+• A styled button: "Sign Up"
 
-        const styles = window.getComputedStyle(header);
-        return styles.position === "sticky" || styles.position === "fixed";
-      });
-    },
+Styling expectations:
+• Background color for the section  
+• Button should stand out  
+• Centered layout  
+
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use a <section> container.",
+      "Center content using flexbox.",
+      "Style button with bright color.",
+      "Add padding around section.",
+    ],
   },
 
   {
     id: "l2q8",
-    title: "Footer Layout",
-    problem: "Create a footer with three columns of links.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const footer = document.querySelector("footer");
-        if (!footer) return false;
+    title: "The Sticky Top Sentinel",
+    problem: `
+Create a sticky top navigation bar.
 
-        const columns =
-          footer.querySelectorAll(
-            ".col, .column, section, nav, ul"
-          );
+Requirements:
+• Navbar stays at top when scrolling  
+• At least 3 links  
+• Styled background  
 
-        const styles = window.getComputedStyle(footer);
-
-        const isLayout =
-          styles.display === "grid" ||
-          styles.display === "flex";
-
-        return columns.length >= 3 && isLayout;
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use position: sticky; top: 0.",
+      "Give navbar a background color.",
+      "Use padding for spacing.",
+      "Use display: flex for layout.",
+    ],
   },
 
   {
     id: "l2q9",
-    title: "Toggle Theme",
-    problem: "Create a dark/light toggle.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const btn =
-          document.querySelector("button") ||
-          document.querySelector(".theme-toggle");
+    title: "The Split Screen Mirage",
+    problem: `
+Create a two-column layout.
 
-        if (!btn) return false;
+Left side:
+• Heading + text  
 
-        const before = document.documentElement.className;
+Right side:
+• One image  
 
-        btn.click();
-        await new Promise(r => setTimeout(r, 200));
+Styling expectations:
+• Both sections side by side  
+• Balanced spacing  
 
-        const after = document.documentElement.className;
-
-        return before !== after || document.body.classList.length > 0;
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Use flexbox with two divs.",
+      "Set width: 50% for each.",
+      "Add padding inside each column.",
+      "Ensure image fits properly.",
+    ],
   },
 
   {
     id: "l2q10",
-    title: "Simple To-Do",
-    problem: "Create a to-do list with input and add button.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const input = document.querySelector("input");
-        const addBtn = document.querySelector("button");
+    title: "The Minimal Landing Shrine",
+    problem: `
+Build a minimal landing page with:
 
-        if (!input || !addBtn) return false;
+• Navbar (3 links)  
+• Hero section  
+• One feature card  
 
-        input.value = "test task";
-        addBtn.click();
+Styling expectations:
+• Clean layout  
+• Proper spacing  
+• Simple colors  
 
-        const item =
-          document.querySelector("li") ||
-          document.querySelector(".todo-item");
-
-        return Boolean(item);
-      });
-    },
+Allowed:
+• HTML + CSS only
+`,
+    hints: [
+      "Structure page with nav + section.",
+      "Use flexbox for layout.",
+      "Add margin/padding for spacing.",
+      "Keep design simple.",
+    ],
   },
 ];

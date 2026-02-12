@@ -1,278 +1,251 @@
 export const level4Questions = [
   {
     id: "l4q1",
-    title: "Advanced Navbar with Dropdown",
-    problem:
-      "Create a navbar that includes at least one dropdown menu that opens on click or hover.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const nav =
-          document.querySelector("nav") ||
-          document.querySelector("header") ||
-          document.querySelector("[role='navigation']");
+    title: "The Living Navigation Crown",
+    problem: `
+Build a navigation bar where the ACTIVE link gets highlighted.
 
-        if (!nav) return false;
+Your page must include:
+• A navbar with at least 4 links:
+  - Home
+  - Services
+  - Projects
+  - Contact  
 
-        const trigger =
-          nav.querySelector("button, .dropdown-toggle, .menu-item");
+Behavior:
+• When you click any link:
+  - That link should become highlighted (different color)
+  - Previously active link should return to normal
 
-        if (!trigger) return false;
-
-        trigger.click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const dropdown =
-          document.querySelector(".dropdown, .menu, .submenu, [role='menu']");
-
-        const visible =
-          dropdown &&
-          window.getComputedStyle(dropdown).display !== "none" &&
-          window.getComputedStyle(dropdown).opacity !== "0";
-
-        return Boolean(visible);
-      });
-    },
+You may use small JavaScript.
+`,
+    hints: [
+      "Give all links a common class like 'nav-link'.",
+      "On click, remove 'active' from all links.",
+      "Then add 'active' to the clicked link.",
+      "Style .active in CSS with a different color."
+    ]
   },
 
   {
     id: "l4q2",
-    title: "Masonry Grid Layout",
-    problem:
-      "Create a Pinterest-style masonry grid with uneven card heights.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const items = document.querySelectorAll(
-          ".card, article, .item, section"
-        );
+    title: "The Expanding Knowledge Card",
+    problem: `
+Create a card that expands to show more text.
 
-        if (items.length < 4) return false;
+Requirements:
+• A visible card with:
+  - Title
+  - Short preview text
+  - Button: "Read More"
 
-        const container =
-          document.querySelector(".grid, .masonry, main") ||
-          items[0]?.parentElement;
+Behavior:
+• Initially show only preview text  
+• On clicking "Read More":
+  - Reveal full content
+  - Change button text to "Show Less"
+• Clicking again hides content
 
-        const styles = window.getComputedStyle(container);
-
-        const isGrid =
-          styles.display === "grid" || styles.columnCount > 1;
-
-        const heights = Array.from(items).map(
-          el => el.getBoundingClientRect().height
-        );
-
-        const uneven = new Set(heights).size > 1;
-
-        return isGrid && uneven;
-      });
-    },
+Allowed:
+• HTML + CSS + small JS
+`,
+    hints: [
+      "Keep full text in a hidden div.",
+      "Use display: none to hide initially.",
+      "Toggle visibility using JavaScript.",
+      "Also toggle button text."
+    ]
   },
 
   {
     id: "l4q3",
-    title: "Accessible Modal",
-    problem:
-      "Create a modal that traps focus and can be closed with Escape key.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const openBtn =
-          document.querySelector("button") ||
-          document.querySelector(".open-modal");
+    title: "The Image Carousel Gate",
+    problem: `
+Build a very simple image carousel.
 
-        if (!openBtn) return false;
+Your page must have:
+• At least 3 images  
+• Two buttons:
+  - "Next"
+  - "Previous"
 
-        openBtn.click();
-        await new Promise(r => setTimeout(r, 300));
+Behavior:
+• Only ONE image visible at a time  
+• Clicking Next shows next image  
+• Clicking Previous shows previous image  
+• Loop around at the ends
 
-        const modal =
-          document.querySelector("[role='dialog'], .modal, .overlay");
-
-        if (!modal) return false;
-
-        // Simulate Escape key
-        const event = new KeyboardEvent("keydown", { key: "Escape" });
-        document.dispatchEvent(event);
-        await new Promise(r => setTimeout(r, 300));
-
-        const stillVisible =
-          window.getComputedStyle(modal).display !== "none";
-
-        return !stillVisible;
-      });
-    },
+Allowed:
+• HTML + CSS + JS
+`,
+    hints: [
+      "Store images in an array.",
+      "Keep a currentIndex variable.",
+      "Change img.src when buttons clicked.",
+      "Wrap index when reaching ends."
+    ]
   },
 
   {
     id: "l4q4",
-    title: "Sticky Navbar with Shadow on Scroll",
-    problem:
-      "Create a navbar that becomes sticky and adds shadow when scrolling.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const nav =
-          document.querySelector("nav") ||
-          document.querySelector("header");
+    title: "The Search Scroll",
+    problem: `
+Create a search filter for a list.
 
-        if (!nav) return false;
+Your page must include:
+• An input box labeled: "Search"
+• A list of at least 5 items, e.g.:
+  - Apple
+  - Banana
+  - Mango
+  - Orange
+  - Pineapple
 
-        window.scrollTo(0, 300);
-        await new Promise(r => setTimeout(r, 300));
-
-        const styles = window.getComputedStyle(nav);
-        const isSticky =
-          styles.position === "sticky" || styles.position === "fixed";
-
-        const hasShadow =
-          styles.boxShadow !== "none" &&
-          styles.boxShadow !== "0px 0px 0px rgba(0, 0, 0, 0)";
-
-        return isSticky && hasShadow;
-      });
-    },
+Behavior:
+• As user types, hide items that don't match  
+• Show only matching items
+`,
+    hints: [
+      "Listen to input event in JavaScript.",
+      "Loop through list items.",
+      "Compare text with input value.",
+      "Use style.display = 'none' to hide."
+    ]
   },
 
   {
     id: "l4q5",
-    title: "Multi-Step Form",
-    problem:
-      "Create a form with at least two steps and next/prev navigation.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const next =
-          document.querySelector(".next, button, [aria-label='next']");
-        const prev =
-          document.querySelector(".prev, [aria-label='previous']");
+    title: "The Countdown Relic",
+    problem: `
+Create a countdown timer.
 
-        if (!next) return false;
+Requirements:
+• Start from 60 seconds  
+• Display time in format: 00:60 → 00:00  
+• When reaches zero, show:
+  "Time's Up!"
 
-        const firstStep =
-          document.querySelector(".step, fieldset, section");
-
-        next.click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const secondStep =
-          document.querySelector(".step, fieldset, section");
-
-        const changed = firstStep !== secondStep || firstStep?.textContent !== secondStep?.textContent;
-
-        return Boolean(changed);
-      });
-    },
+Allowed:
+• HTML + CSS + JS
+`,
+    hints: [
+      "Use setInterval in JavaScript.",
+      "Decrease seconds every 1000ms.",
+      "Update a span with remaining time.",
+      "Clear interval when time hits 0."
+    ]
   },
 
   {
     id: "l4q6",
-    title: "Animated Card Hover",
-    problem:
-      "Create cards that animate (scale or elevate) on hover.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const card =
-          document.querySelector(".card, article, section");
+    title: "The Modal Shadow Portal",
+    problem: `
+Create a popup modal window.
 
-        if (!card) return false;
+Your page must include:
+• Button: "Open Modal"
 
-        const before = window.getComputedStyle(card).transform;
-
-        card.dispatchEvent(new Event("mouseenter"));
-        await new Promise(r => setTimeout(r, 200));
-
-        const after = window.getComputedStyle(card).transform;
-
-        return before !== after;
-      });
-    },
+Behavior:
+• Clicking button opens a popup with message:
+  "Welcome to the modal!"
+• Popup should have a close (×) button  
+• Clicking outside should also close it
+`,
+    hints: [
+      "Create a hidden modal div.",
+      "Use position: fixed with overlay.",
+      "Toggle visibility in JavaScript.",
+      "Add click listener on overlay to close."
+    ]
   },
 
   {
     id: "l4q7",
-    title: "Live Search Filter",
-    problem:
-      "Create a search input that filters a list in real time.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const input = document.querySelector("input[type='search'], input");
-        if (!input) return false;
+    title: "The Progress Bar Forge",
+    problem: `
+Create a progress bar that fills over time.
 
-        const items = document.querySelectorAll("li, .item");
-        if (items.length < 2) return false;
+Requirements:
+• Start at 0%  
+• Automatically fill to 100% in 10 seconds  
+• Show percentage text (e.g., 45%)
 
-        input.value = "xyz";
-        input.dispatchEvent(new Event("input"));
-        await new Promise(r => setTimeout(r, 300));
-
-        const visible = Array.from(items).some(
-          el => window.getComputedStyle(el).display !== "none"
-        );
-
-        return true; // Pass if search input exists + list present (tolerant)
-      });
-    },
+Allowed:
+• HTML + CSS + JS
+`,
+    hints: [
+      "Use a container div as track.",
+      "Use inner div as fill bar.",
+      "Increase width with setInterval.",
+      "Update text simultaneously."
+    ]
   },
 
   {
     id: "l4q8",
-    title: "Responsive Sidebar",
-    problem:
-      "Create a sidebar that collapses on small screens.",
-    tests: async (page) => {
-      return await page.evaluate(() => {
-        const sidebar =
-          document.querySelector(".sidebar, aside, nav");
+    title: "The Theme Toggle Shrine",
+    problem: `
+Create a light/dark mode toggle.
 
-        if (!sidebar) return false;
+Your page must include:
+• Button: "Toggle Theme"
 
-        const styles = window.getComputedStyle(sidebar);
-        return (
-          styles.width !== "0px" ||
-          styles.display !== "none"
-        );
-      });
-    },
+Behavior:
+• Default: light mode  
+• Click → switch to dark mode  
+• Click again → back to light mode  
+• Change background + text colors
+`,
+    hints: [
+      "Use a body class like 'dark'.",
+      "Toggle classList in JS.",
+      "Define CSS for both modes.",
+      "Ensure readable contrast."
+    ]
   },
 
   {
     id: "l4q9",
-    title: "Animated Progress Bar",
-    problem:
-      "Create a progress bar that animates from 0 to 100%.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const bar =
-          document.querySelector(".progress, progress, .bar");
+    title: "The Live Character Counter",
+    problem: `
+Create a textarea with live character count.
 
-        if (!bar) return false;
+Requirements:
+• A text box where user types  
+• Display text like:
+  "Characters: 0 / 200"
+• Limit input to 200 characters
 
-        const before = window.getComputedStyle(bar).width;
-        await new Promise(r => setTimeout(r, 400));
-        const after = window.getComputedStyle(bar).width;
-
-        return before !== after;
-      });
-    },
+Allowed:
+• HTML + CSS + JS
+`,
+    hints: [
+      "Listen to input event.",
+      "Use textarea.value.length.",
+      "Update a span with count.",
+      "Prevent typing beyond 200."
+    ]
   },
 
   {
     id: "l4q10",
-    title: "Toast Notification",
-    problem:
-      "Show a toast notification when a button is clicked.",
-    tests: async (page) => {
-      return await page.evaluate(async () => {
-        const btn =
-          document.querySelector("button") ||
-          document.querySelector(".show-toast");
+    title: "The Click Tracker Tablet",
+    problem: `
+Create a button click tracker.
 
-        if (!btn) return false;
+Your page must include:
+• Button: "Click Me"
+• Text showing: "Clicks: 0"
 
-        btn.click();
-        await new Promise(r => setTimeout(r, 300));
-
-        const toast =
-          document.querySelector(".toast, .notification, [role='alert']");
-
-        return Boolean(toast);
-      });
-    },
-  },
+Behavior:
+• Every click increases counter by 1  
+• Counter updates live
+`,
+    hints: [
+      "Use a JS variable count = 0.",
+      "Increment on button click.",
+      "Update a span with new value.",
+      "Keep logic simple."
+    ]
+  }
 ];
